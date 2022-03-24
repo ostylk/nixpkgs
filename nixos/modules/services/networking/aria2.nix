@@ -108,10 +108,9 @@ in
 
     users.users.${cfg.user} = {
       group = cfg.group;
-      uid = config.ids.uids.${cfg.user};
     };
 
-    users.groups.${cfg.group}.gid = config.ids.gids.${cfg.group};
+    users.groups.${cfg.group} = {};
 
     systemd.tmpfiles.rules = [
       "d '${homeDir}' 0770 ${cfg.user} ${cfg.group} - -"
