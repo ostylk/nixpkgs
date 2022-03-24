@@ -38,6 +38,20 @@ in
           accessible to users in the "aria2" group.
         '';
       };
+      user = mkOption {
+        type = types.str;
+        default = "aria2";
+        description = ''
+          The linux user under which the aria2 service is running.
+        '';
+      };
+      group = mkOption {
+        type = types.str;
+        default = "aria2";
+        description = ''
+          The linux group under which the aria2 service is running.
+        '';
+      };
       openPorts = mkOption {
         type = types.bool;
         default = false;
@@ -92,19 +106,16 @@ in
       allowedTCPPorts = [ config.services.aria2.rpcListenPort ];
     };
 
-    users.users.aria2 = {
-      group = "aria2";
-      uid = config.ids.uids.aria2;
-      description = "aria2 user";
-      home = homeDir;
-      createHome = false;
+    users.users.${cfg.user} = {
+      group = cfg.group;
+      uid = config.ids.uids.${cfg.user};
     };
 
-    users.groups.aria2.gid = config.ids.gids.aria2;
+    users.groups.${cfg.group}.gid = config.ids.gids.${cfg.group};
 
     systemd.tmpfiles.rules = [
-      "d '${homeDir}' 0770 aria2 aria2 - -"
-      "d '${config.services.aria2.downloadDir}' 0770 aria2 aria2 - -"
+      "d '${homeDir}' 0770 ${cfg.user} ${cfg.group} - -"
+      "d '${config.services.aria2.downloadDir}' 0770 ${cfg.user} ${cfg.group} - -"
     ];
 
     systemd.services.aria2 = {
@@ -123,8 +134,8 @@ in
         Restart = "on-abort";
         ExecStart = "${pkgs.aria2}/bin/aria2c --enable-rpc --conf-path=${settingsDir}/aria2.conf ${config.services.aria2.extraArguments} --save-session=${sessionFile}";
         ExecReload = "${pkgs.coreutils}/bin/kill -HUP $MAINPID";
-        User = "aria2";
-        Group = "aria2";
+        User = cfg.user;
+        Group = cfg.group;
       };
     };
   };
